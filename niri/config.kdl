@@ -267,6 +267,9 @@ layout {
 // which may be more convenient to use.
 // See the binds section below for more spawn examples.
 
+// 壁纸（niri 本身不画壁纸，用 swaybg 铺在 Background 层）
+spawn-at-startup "swaybg" "-i" "/home/wjf/Pictures/wallhaven-5yk9o1.png" "-m" "fill" "-c" "#181a24"
+
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
 spawn-at-startup "/home/wjf/.config/waybar/scripts/brightness-daemon.sh"

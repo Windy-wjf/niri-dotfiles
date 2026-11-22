@@ -30,6 +30,9 @@ cp -a "$SRC/fcitx5/conf/." "$DEST/fcitx5/conf/"
 cp -a "$SRC/environment.d/input-method.conf" "$DEST/environment.d/"
 cp -a "$SRC/mimeapps.list" "$DEST/mimeapps.list"
 
+mkdir -p "$HOME/Pictures"
+cp -a "$SRC/assets/wallhaven-5yk9o1.png" "$HOME/Pictures/"
+
 chmod +x "$DEST/waybar/scripts/"*.sh "$DEST/waybar/scripts/"*.py 2>/dev/null || true
 
 if [ "$HOME" != "/home/wjf" ]; then

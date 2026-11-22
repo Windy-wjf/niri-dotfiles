@@ -11,6 +11,7 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 - **显示设置面板**：点击状态栏显示器图标调整分辨率 / 刷新率 / 缩放倍率，可“保存为默认”写入 niri 配置
 - **fcitx5**：中文输入环境变量与配置
 - **fuzzel**：与 waybar 一致的暗色主题
+- **壁纸**：`swaybg` 在 Background 层铺暗色月球壁纸（图片已包含在 `assets/`）
 
 ## 目录结构
 
@@ -31,13 +32,14 @@ environment.d/input-method.conf # niri 会话的输入法环境变量
 install.sh                      # 安装脚本
 machine-check.sh                # 换机器时检测硬件并提示需要改的配置
 mimeapps.list                   # 默认应用关联
+assets/wallhaven-5yk9o1.png     # 壁纸图片（暗色月球）
 ```
 
 ## 依赖
 
 ```bash
 sudo pacman -S --needed \
-  niri waybar kitty fuzzel swaylock \
+  niri waybar kitty fuzzel swaylock swaybg \
   fcitx5 fcitx5-chinese-addons \
   polkit-gnome networkmanager wireplumber playerctl \
   ddcutil python-gobject gtk3 gtk-layer-shell python-pillow grim \
@@ -95,7 +97,7 @@ cd niri-dotfiles
 - `niri/config.kdl`：输出段为 `DP-1`、`3840x2160@160`、`scale 2`，换显示器需要修改。
 - 状态栏高度 32px；网络弹窗位置会在打开时截图识别网络图标，自动跟随。
 - `waybar/wifibar.py` 是早期基于 pywayland + cairo 的 WiFi 模块/悬浮菜单实现，依赖 `python3-cairo`、`pywayland`；当前 waybar 已改用内置 network 模块 + `scripts/network_popup.py`，该文件仅作参考保留。
-- 系统级默认应用 `mimeapps.list` 已包含在仓库里，安装脚本会一并复制。
+- 系统级默认应用 `mimeapps.list` 已包含在仓库里，安装脚本会一并复制。壁纸图片在 `assets/`，安装脚本会复制到 `~/Pictures/`，并把配置里的 `/home/wjf/Pictures/...` 路径改写成当前家目录。
 
 ## 换机器迁移清单
 

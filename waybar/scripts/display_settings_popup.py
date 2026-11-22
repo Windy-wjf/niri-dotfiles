@@ -201,9 +201,9 @@ class DisplayPopup(Gtk.Window):
         header.pack_start(close, False, False, 0)
         root.pack_start(header, False, False, 0)
 
-        self.output_combo = Gtk.ComboBoxText()
-        self.output_combo.connect("changed", self.on_output_changed)
-        root.pack_start(self.output_combo, False, False, 0)
+        # 用单选按钮切换显示器；下拉菜单会抢焦点导致窗口被误关
+        self.output_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        root.pack_start(self.output_box, False, False, 0)
 
         self.info_label = Gtk.Label(label="")
         self.info_label.set_xalign(0)
@@ -269,17 +269,25 @@ class DisplayPopup(Gtk.Window):
         names = list(self.outputs.keys())
         previous = self.current_output
         self.output_names = names
-        self.output_combo.remove_all()
-        for name in names:
-            info = self.outputs[name]
-            label = "%s · %s" % (name, info.get("model", ""))
-            self.output_combo.append_text(label)
-
         if previous in names:
             self.current_output = previous
         else:
             self.current_output = names[0]
-        self.output_combo.set_active(names.index(self.current_output))
+
+        for child in self.output_box.get_children():
+            self.output_box.remove(child)
+        group = None
+        for name in names:
+            info = self.outputs[name]
+            label = "%s · %s" % (name, info.get("model", ""))
+            rb = Gtk.RadioButton.new_with_label_from_widget(group, label)
+            if group is None:
+                group = rb
+            if name == self.current_output:
+                rb.set_active(True)
+            rb.connect("toggled", self.on_output_toggled, name)
+            self.output_box.pack_start(rb, False, False, 0)
+        self.output_box.show_all()
 
         self._update_info()
         self._rebuild_modes()
@@ -374,13 +382,10 @@ class DisplayPopup(Gtk.Window):
                 row += 1
         self.scale_grid.show_all()
 
-    def on_output_changed(self, combo):
-        if getattr(self, "_refreshing", False):
+    def on_output_toggled(self, button, name):
+        if self._loading or not button.get_active():
             return
-        idx = combo.get_active()
-        if idx < 0 or idx >= len(self.output_names):
-            return
-        self.current_output = self.output_names[idx]
+        self.current_output = name
         self.refresh_data()
 
     def on_mode_toggled(self, button, key):

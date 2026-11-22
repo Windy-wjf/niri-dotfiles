@@ -9,7 +9,7 @@
 
   "modules-left": ["niri/workspaces"],
   "modules-center": ["niri/window"],
-  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "tray", "custom/clock", "clock"],
+  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/display", "tray", "custom/clock", "clock"],
 
   "niri/workspaces": {
     "format": "{icon}",
@@ -82,6 +82,13 @@
     "tooltip": false,
     "on-scroll-up": "/home/wjf/.config/waybar/scripts/brightness.sh up",
     "on-scroll-down": "/home/wjf/.config/waybar/scripts/brightness.sh down"
+  },
+
+  "custom/display": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "显示设置：分辨率 / 刷新率 / 缩放",
+    "on-click": "/home/wjf/.config/waybar/scripts/display_settings_popup.py"
   },
 
   "tray": {

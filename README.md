@@ -8,6 +8,7 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 - **waybar**（32px 高）：工作区、窗口标题、CPU / 内存 / 显存、网络、音量、外接显示器亮度、托盘、日期时间
 - **网络悬浮窗**：点击网络图标打开 WiFi 列表，支持连接、断开、自动连接；点击空白处 / 再点图标 / ESC 关闭
 - **亮度守护进程**：DDC/CI 控制外接显示器，FIFO 合并滚轮事件，避免 DDC 延迟导致的卡顿
+- **显示设置面板**：点击状态栏显示器图标调整分辨率 / 刷新率 / 缩放倍率，可“保存为默认”写入 niri 配置
 - **fcitx5**：中文输入环境变量与配置
 - **fuzzel**：与 waybar 一致的暗色主题
 
@@ -23,6 +24,7 @@ waybar/scripts/vram.sh          # 独显显存占用
 waybar/scripts/brightness.sh    # 亮度显示 / 发送 up-down 事件
 waybar/scripts/brightness-daemon.sh  # DDC/CI 亮度守护进程
 waybar/scripts/network_popup.py # GTK 网络悬浮窗
+waybar/scripts/display_settings_popup.py  # GTK 显示设置面板（分辨率/刷新率/缩放）
 fuzzel/fuzzel.ini               # fuzzel 暗色主题
 fcitx5/                         # fcitx5 配置
 environment.d/input-method.conf # niri 会话的输入法环境变量

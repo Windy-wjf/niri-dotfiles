@@ -17,6 +17,7 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 niri/config.kdl                 # niri 主配置：输出、启动项、快捷键
 waybar/config.jsonc             # waybar 模块布局
 waybar/style.css                # waybar 样式（暗色半透明 + 圆角）
+waybar/wifibar.py               # 旧版 WiFi 模块（pywayland + cairo，当前未启用）
 waybar/scripts/clock.sh         # 日期 + 星期两行输出
 waybar/scripts/vram.sh          # 独显显存占用
 waybar/scripts/brightness.sh    # 亮度显示 / 发送 up-down 事件
@@ -39,7 +40,7 @@ sudo pacman -S --needed \
   ttf-cascadia-code-nerd ttf-nerd-fonts-symbols
 ```
 
-可选：`nautilus`（`Super+E` 文件管理器）、`swaylock` 需要 `ext-session-lock`（niri 已支持）。
+可选：`nautilus`（`Super+E` 文件管理器）、`swaylock` 需要 `ext-session-lock`（niri 已支持）；未启用的 `wifibar.py` 另需 `python3-cairo`、`pywayland`。
 
 ## 安装
 
@@ -89,4 +90,5 @@ cd niri-dotfiles
 - `waybar/scripts/brightness-daemon.sh`：`STEP=5` 为亮度步进；显示器需支持 DDC/CI（当前配置为 HKC G27H7Pro / DP-1）。
 - `niri/config.kdl`：输出段为 `DP-1`、`3840x2160@160`、`scale 2`，换显示器需要修改。
 - 状态栏高度 32px；网络弹窗位置会在打开时截图识别网络图标，自动跟随。
+- `waybar/wifibar.py` 是早期基于 pywayland + cairo 的 WiFi 模块/悬浮菜单实现，依赖 `python3-cairo`、`pywayland`；当前 waybar 已改用内置 network 模块 + `scripts/network_popup.py`，该文件仅作参考保留。
 - 系统级默认应用（`mimeapps.list`）和 GTK 主题不在本仓库内。

@@ -22,7 +22,7 @@ done
 
 mkdir -p "$DEST"/{niri,waybar/scripts,fuzzel,fcitx5/conf,environment.d}
 cp -a "$SRC/niri/config.kdl" "$DEST/niri/"
-cp -a "$SRC/waybar/config.jsonc" "$SRC/waybar/style.css" "$DEST/waybar/"
+cp -a "$SRC/waybar/config.jsonc" "$SRC/waybar/style.css" "$SRC/waybar/wifibar.py" "$DEST/waybar/"
 cp -a "$SRC/waybar/scripts/." "$DEST/waybar/scripts/"
 cp -a "$SRC/fuzzel/fuzzel.ini" "$DEST/fuzzel/"
 cp -a "$SRC/fcitx5/config" "$SRC/fcitx5/profile" "$DEST/fcitx5/"

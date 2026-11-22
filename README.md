@@ -27,6 +27,8 @@ fuzzel/fuzzel.ini               # fuzzel 暗色主题
 fcitx5/                         # fcitx5 配置
 environment.d/input-method.conf # niri 会话的输入法环境变量
 install.sh                      # 安装脚本
+machine-check.sh                # 换机器时检测硬件并提示需要改的配置
+mimeapps.list                   # 默认应用关联
 ```
 
 ## 依赖
@@ -91,4 +93,24 @@ cd niri-dotfiles
 - `niri/config.kdl`：输出段为 `DP-1`、`3840x2160@160`、`scale 2`，换显示器需要修改。
 - 状态栏高度 32px；网络弹窗位置会在打开时截图识别网络图标，自动跟随。
 - `waybar/wifibar.py` 是早期基于 pywayland + cairo 的 WiFi 模块/悬浮菜单实现，依赖 `python3-cairo`、`pywayland`；当前 waybar 已改用内置 network 模块 + `scripts/network_popup.py`，该文件仅作参考保留。
-- 系统级默认应用（`mimeapps.list`）和 GTK 主题不在本仓库内。
+- 系统级默认应用 `mimeapps.list` 已包含在仓库里，安装脚本会一并复制。
+
+## 换机器迁移清单
+
+`install.sh` 会把配置里的 `/home/wjf` 改写成当前用户的家目录，但下面这些跟硬件/桌面环境绑定，需要按新机器核对（可先运行 `./machine-check.sh` 查看检测结果）：
+
+1. **显示器**：`niri/config.kdl` 的 `output "DP-1" { mode "3840x2160@160.000"; scale 2; }` 改成新机器的接口、分辨率、刷新率和缩放。
+2. **无线网卡**：`waybar/scripts/network_popup.py` 的 `IFACE = "wlan0"` 改成实际网卡名。
+3. **显卡**：`waybar/scripts/vram.sh` 读的是 `card1`，按新机器的 DRM 节点调整。
+4. **亮度**：`brightness*.sh` 依赖 ddcutil 和支持 DDC/CI 的外接显示器；笔记本内屏请改用 backlight / brightnessctl。
+5. **外观**（仓库不含这些大文件）：
+   - 安装 GTK 主题 `material-gnome-theme`（放到 `~/.themes/`）和图标 `WhiteSur`（放到 `~/.local/share/icons/`）；
+   - 执行一次：
+     ```sh
+     gsettings set org.gnome.desktop.interface gtk-theme material-gnome-theme
+     gsettings set org.gnome.desktop.interface icon-theme WhiteSur
+     gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+     ```
+6. **会话**：这台机器由 GDM 拉起 `niri-session`；新机器装好 niri 后在 GDM 选 niri 会话即可。
+
+按上面 6 步调整后，快捷键、状态栏、网络弹窗、亮度守护进程、输入法等的布局和体验就能和这台机器一致。

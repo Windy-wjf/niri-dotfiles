@@ -12,7 +12,7 @@ echo "目标目录: $DEST"
 
 mkdir -p "$DEST" "$BACKUP"
 
-for rel in niri waybar fuzzel fcitx5 environment.d; do
+for rel in niri waybar fuzzel fcitx5 environment.d mimeapps.list; do
     if [ -e "$DEST/$rel" ]; then
         mkdir -p "$BACKUP/$(dirname "$rel")"
         cp -a "$DEST/$rel" "$BACKUP/$rel"
@@ -28,6 +28,7 @@ cp -a "$SRC/fuzzel/fuzzel.ini" "$DEST/fuzzel/"
 cp -a "$SRC/fcitx5/config" "$SRC/fcitx5/profile" "$DEST/fcitx5/"
 cp -a "$SRC/fcitx5/conf/." "$DEST/fcitx5/conf/"
 cp -a "$SRC/environment.d/input-method.conf" "$DEST/environment.d/"
+cp -a "$SRC/mimeapps.list" "$DEST/mimeapps.list"
 
 chmod +x "$DEST/waybar/scripts/"*.sh "$DEST/waybar/scripts/"*.py 2>/dev/null || true
 
@@ -47,9 +48,10 @@ cat <<EOF
 原配置备份: $BACKUP
 
 接下来：
-  1. 确认依赖已安装（见 README.md）
-  2. 注销并重新登录 niri 会话
-  3. 按 Super+/ 查看快捷键
+  1. 运行仓库里的 ./machine-check.sh，并按 README 的“换机器迁移清单”核对硬件相关配置
+  2. 确认依赖已安装（见 README.md）
+  3. 注销并重新登录 niri 会话
+  4. 按 Super+/ 查看快捷键
 
 注意：如果显示器不是 DP-1 / 3840x2160@160，请先修改
   $DEST/niri/config.kdl 里的 output 段。

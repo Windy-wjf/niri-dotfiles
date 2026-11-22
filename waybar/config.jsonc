@@ -1,0 +1,104 @@
+// Waybar 配置：适配 niri（Wayland）+ 4K 2x 缩放 + CaskaydiaCove Nerd Font
+// 网络悬浮窗使用 Python GTK（已获用户授权）
+
+{
+  "layer": "top",
+  "position": "top",
+  "height": 32,
+  "spacing": 6,
+
+  "modules-left": ["niri/workspaces"],
+  "modules-center": ["niri/window"],
+  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "tray", "custom/clock", "clock"],
+
+  "niri/workspaces": {
+    "format": "{icon}",
+    "format-icons": {
+      "default": "",
+      "empty": "",
+      "active": "",
+      "focused": "",
+      "urgent": ""
+    },
+    "disable-click": false,
+    "enable-bar-scroll": true
+  },
+
+  "niri/window": {
+    "format": "{title}",
+    "icon": true,
+    "icon-size": 18,
+    "separate-outputs": true,
+    "show-empty": false,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "  $1",
+      "(.*) - Mozilla Firefox": "  $1",
+      "(.*) - Visual Studio Code": "  $1",
+      "(.*) - kitty": "  $1"
+    }
+  },
+
+  "cpu": {
+    "format": "cpu {usage}%",
+    "interval": 5
+  },
+
+  "memory": {
+    "format": "ram {percentage}%",
+    "interval": 5
+  },
+
+  "custom/vram": {
+    "exec": "~/.config/waybar/scripts/vram.sh",
+    "interval": 5,
+    "format": "vram {}",
+    "tooltip": false
+  },
+
+  "network": {
+    "format-wifi": " {signalStrength}%",
+    "format-ethernet": " {ifname}",
+    "format-disconnected": " 断开",
+    "tooltip-format-wifi": "已连接：{essid}\n信号强度：{signalStrength}%",
+    "tooltip-format-ethernet": "有线连接：{ifname}",
+    "tooltip-format-disconnected": "未连接网络",
+    "interval": 5,
+    "on-click": "/home/wjf/.config/waybar/scripts/network_popup.py"
+  },
+
+  "pulseaudio": {
+    "format": " {volume}%",
+    "format-muted": " 静音",
+    "scroll-step": 5,
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+  },
+
+  "custom/brightness": {
+    "exec": "/home/wjf/.config/waybar/scripts/brightness.sh",
+    "interval": 2,
+    "signal": 8,
+    "exec-on-event": true,
+    "format": " {}",
+    "tooltip": false,
+    "on-scroll-up": "/home/wjf/.config/waybar/scripts/brightness.sh up",
+    "on-scroll-down": "/home/wjf/.config/waybar/scripts/brightness.sh down"
+  },
+
+  "tray": {
+    "spacing": 8
+  },
+
+  "custom/clock": {
+    "exec": "~/.config/waybar/scripts/clock.sh",
+    "interval": 30,
+    "return-type": "json",
+    "justify": "center",
+    "format": "{}"
+  },
+
+  "clock": {
+    "format": "{:%H:%M}",
+    "interval": 30,
+    "tooltip-format": "{:%Y-%m-%d %A}"
+  }
+}

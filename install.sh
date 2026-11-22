@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# 安装 niri + waybar + fuzzel + fcitx5 配置到当前用户
+set -euo pipefail
+
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEST="${XDG_CONFIG_HOME:-$HOME/.config}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+BACKUP="$HOME/niri-dotfiles-backup-$STAMP"
+
+echo "源目录:   $SRC"
+echo "目标目录: $DEST"
+
+mkdir -p "$DEST" "$BACKUP"
+
+for rel in niri waybar fuzzel fcitx5 environment.d; do
+    if [ -e "$DEST/$rel" ]; then
+        mkdir -p "$BACKUP/$(dirname "$rel")"
+        cp -a "$DEST/$rel" "$BACKUP/$rel"
+        echo "已备份: $DEST/$rel -> $BACKUP/$rel"
+    fi
+done
+
+mkdir -p "$DEST"/{niri,waybar/scripts,fuzzel,fcitx5/conf,environment.d}
+cp -a "$SRC/niri/config.kdl" "$DEST/niri/"
+cp -a "$SRC/waybar/config.jsonc" "$SRC/waybar/style.css" "$DEST/waybar/"
+cp -a "$SRC/waybar/scripts/." "$DEST/waybar/scripts/"
+cp -a "$SRC/fuzzel/fuzzel.ini" "$DEST/fuzzel/"
+cp -a "$SRC/fcitx5/config" "$SRC/fcitx5/profile" "$DEST/fcitx5/"
+cp -a "$SRC/fcitx5/conf/." "$DEST/fcitx5/conf/"
+cp -a "$SRC/environment.d/input-method.conf" "$DEST/environment.d/"
+
+chmod +x "$DEST/waybar/scripts/"*.sh "$DEST/waybar/scripts/"*.py 2>/dev/null || true
+
+if [ "$HOME" != "/home/wjf" ]; then
+    while IFS= read -r f; do
+        sed -i "s|/home/wjf|$HOME|g" "$f"
+        echo "已改写路径: $f"
+    done < <(grep -rl '/home/wjf' \
+        "$DEST/niri/config.kdl" \
+        "$DEST/waybar/config.jsonc" \
+        "$DEST/waybar/scripts/brightness.sh" 2>/dev/null || true)
+fi
+
+cat <<EOF
+
+安装完成。
+原配置备份: $BACKUP
+
+接下来：
+  1. 确认依赖已安装（见 README.md）
+  2. 注销并重新登录 niri 会话
+  3. 按 Super+/ 查看快捷键
+
+注意：如果显示器不是 DP-1 / 3840x2160@160，请先修改
+  $DEST/niri/config.kdl 里的 output 段。
+EOF

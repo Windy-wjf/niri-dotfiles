@@ -9,7 +9,7 @@
 
   "modules-left": ["niri/workspaces"],
   "modules-center": ["niri/window"],
-  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/notification", "tray", "custom/clock", "clock", "custom/lock", "custom/settings", "custom/power"],
+  "modules-right": ["clock", "custom/clock", "cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/notification", "tray", "custom/power", "custom/settings"],
 
   "niri/workspaces": {
     "format": "{icon}",
@@ -123,13 +123,6 @@
     "tooltip-format": "{:%Y-%m-%d %A}"
   },
 
-
-  "custom/lock": {
-    "format": "",
-    "tooltip": true,
-    "tooltip-format": "锁定屏幕（Super+Alt+L）",
-    "on-click": "swaylock"
-  },
 
   "custom/settings": {
     "format": "",

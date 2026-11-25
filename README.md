@@ -13,7 +13,7 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 - **fuzzel**：与 waybar 一致的暗色主题
 - **通知**：swaync 守护进程 + 状态栏通知按钮（左键切换通知中心，右键切换勿扰）
 - **电源菜单**：状态栏最右电源图标点击弹出小窗口，含锁屏 / 登出 / 关机 / 重启（关机和重启需二次确认）
-- **锁屏**：状态栏锁屏按钮 + `Super+Alt+L` 快捷键；`swayidle` 空闲 5 分钟自动锁屏、10 分钟息屏；`swaylock` 用暗化模糊壁纸和 Catppuccin 配色
+- **锁屏**：电源菜单中的锁屏项 + `Super+Alt+L` 快捷键；`swayidle` 空闲 5 分钟自动锁屏、10 分钟息屏；`swaylock` 用暗化模糊壁纸和 Catppuccin 配色
 - **WPS 兼容**：niri 不内置 XWayland，用 `xwayland-satellite` 提供 X11；`wps-desktop/` 里的用户级 desktop 覆盖显式设置 `DISPLAY=:0`、`QT_QPA_PLATFORM=xcb` 并清除 `WAYLAND_DISPLAY`，使 WPS 走 X11 而不崩溃，Nautilus 双击 doc/pdf 等文件可正常打开
 - **设置面板**（状态栏最右齿轮 ``）：一个面板两个标签页
   - 「状态栏模块」：勾选要显示的模块；拖动每行左侧 `☰` 把手调整顺序（保持原区域）；应用后写回 `config.jsonc` 并重载 waybar（自动备份）

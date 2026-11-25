@@ -106,15 +106,6 @@ window#waybar {
   margin-right: 8px;
 }
 
-#custom-lock {
-  color: #f38ba8;
-  padding: 0 10px;
-}
-
-#custom-lock:hover {
-  color: #ffffff;
-}
-
 #custom-settings {
   color: #89dceb;
   padding: 0 10px 0 4px;

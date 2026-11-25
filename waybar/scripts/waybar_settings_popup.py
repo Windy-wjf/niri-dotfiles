@@ -37,7 +37,6 @@ MODULE_LABELS = {
     "cpu": "CPU 占用",
     "memory": "内存占用",
     "custom/vram": "显存占用",
-    "custom/lock": "锁屏按钮",
     "network": "网络",
     "pulseaudio": "音量",
     "custom/brightness": "亮度",

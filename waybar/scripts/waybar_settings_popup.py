@@ -765,7 +765,6 @@ class SettingsPopup(Gtk.Window):
         GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, POPUP_RIGHT_MARGIN)
         GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
 
-        self.ever_inside = False
         self._closing = False
 
         # 拖动模块时的高亮反馈
@@ -788,8 +787,7 @@ class SettingsPopup(Gtk.Window):
         )
 
         self.connect("key-press-event", self.on_key)
-        self.connect("enter-notify-event", self.on_enter)
-        self.connect("leave-notify-event", self.on_leave)
+        # 鼠标移出窗口不关闭面板（只保留：点面板外、ESC、再次点齿轮）
         # 不连接 button-press-event：子控件的点击会冒泡到顶层，
         # 否则点复选框/标签页就会把面板关掉。空白点击由 clickaway 遮罩处理。
 
@@ -820,7 +818,6 @@ class SettingsPopup(Gtk.Window):
         ):
             GtkLayerShell.set_anchor(self.clickaway, edge, True)
         self.clickaway.connect("button-press-event", lambda w, e: self.shutdown())
-        self.clickaway.connect("motion-notify-event", self.on_clickaway_motion)
 
         notebook = Gtk.Notebook()
         notebook.append_page(ModulesPage(), Gtk.Label(label="状态栏模块"))
@@ -831,27 +828,6 @@ class SettingsPopup(Gtk.Window):
         if event.keyval == Gdk.KEY_Escape:
             self.shutdown()
             return True
-        return False
-
-    def on_enter(self, widget, event):
-        self.ever_inside = True
-        return False
-
-    def on_leave(self, widget, event):
-        if event.detail == Gdk.NotifyType.INFERIOR:
-            return False
-        GLib.timeout_add(250, self._close_if_left)
-        return False
-
-    def _close_if_left(self):
-        if getattr(self, "_dragging", False):
-            return False
-        self.shutdown()
-        return False
-
-    def on_clickaway_motion(self, widget, event):
-        if self.ever_inside and not getattr(self, "_dragging", False):
-            self.shutdown()
         return False
 
     def on_control(self, fd, condition):

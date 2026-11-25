@@ -30,8 +30,11 @@ def spawn(cmd):
         pass
 
 
-def detect_power_icon_right_edge(screen_width):
-    """截取状态栏，找到电源图标（红色 #f87171）的右边缘（逻辑像素）。"""
+def detect_power_icon_center(screen_width):
+    """截取状态栏，找到电源图标（红色 #f87171）的中心 x（逻辑像素）。
+
+    扫描整条状态栏，让电源按钮不论在左/中/右都能被找到。
+    """
     try:
         from PIL import Image
     except Exception:
@@ -57,7 +60,7 @@ def detect_power_icon_right_edge(screen_width):
     w, h = im.size
     pixels = im.load()
     cols = []
-    for x in range(int(w * 0.75), w):
+    for x in range(w):
         for y in range(h):
             r, g, b = pixels[x, y]
             # #f87171 = (248, 113, 113)，与粉色锁屏图标区分开
@@ -65,7 +68,9 @@ def detect_power_icon_right_edge(screen_width):
                     and r > g + 80 and r > b + 80):
                 cols.append(x)
                 break
-    return cols[-1] if cols else None
+    if not cols:
+        return None
+    return (cols[0] + cols[-1]) / 2.0
 
 
 class PowerMenu(Gtk.Window):
@@ -96,13 +101,17 @@ class PowerMenu(Gtk.Window):
             monitor = display.get_primary_monitor() or display.get_monitor(0)
         screen_width = monitor.get_geometry().width if monitor else 1920
 
-        icon_right = detect_power_icon_right_edge(screen_width)
-        if icon_right is None:
+        icon_center = detect_power_icon_center(screen_width)
+        if icon_center is None:
+            # 检测失败时回退到右上角
             right_margin = POPUP_RIGHT_FALLBACK
         else:
-            right_margin = screen_width - (icon_right + 6)
+            # 窗口中心对齐电源图标中心；只锚定右侧（锚定左侧会被 layer shell 撑满宽度）。
+            popup_center = icon_center
+            right_margin = screen_width - (popup_center + POPUP_WIDTH / 2.0)
         right_margin = max(8, min(right_margin, screen_width - POPUP_WIDTH - 8))
-        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, right_margin)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, int(right_margin))
         GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
 
         self.ever_inside = False

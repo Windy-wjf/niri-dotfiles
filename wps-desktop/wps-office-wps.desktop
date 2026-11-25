@@ -23,7 +23,7 @@ Comment[vi_VN]=Sử dụng WPS Writer để viết báo cáo và dàn trang bài
 Comment[zh_CN]=使用 WPS 文字编写报告，排版文章
 Comment[zh_HK]=使用WPS文字編寫報告，排版文章。
 Comment[zh_TW]=使用WPS Writer編寫報告、排版文章。
-Exec=env DISPLAY=:0 /usr/bin/wps %U
+Exec=env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb DISPLAY=:0 /usr/bin/wps %U
 GenericName=WPS Writer
 GenericName[ar_SA]=WPS Docs
 GenericName[de_DE]=WPS Docs

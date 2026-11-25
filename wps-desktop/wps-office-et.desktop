@@ -23,7 +23,7 @@ Comment[vi_VN]=Sử dụng WPS Spreadsheets để phân tích và quản lý d�
 Comment[zh_CN]=使用WPS表格分析、管理数据
 Comment[zh_HK]=使用WPS表格分析、管理數據。
 Comment[zh_TW]=使用WPS Spreadsheets分析、管理資料。
-Exec=env DISPLAY=:0 /usr/bin/et %F
+Exec=env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb DISPLAY=:0 /usr/bin/et %F
 GenericName=WPS Spreadsheets
 GenericName[ar_SA]=WPS جداول البيانات
 GenericName[de_DE]=WPS Spreadsheets

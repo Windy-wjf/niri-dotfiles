@@ -23,7 +23,7 @@ Comment[vi_VN]=Sử dụng WPS Presentation để chỉnh sửa và trình chi�
 Comment[zh_CN]=使用 WPS 演示编辑、播放演示文稿
 Comment[zh_HK]=使用WPS演示編輯、播放演示文稿。
 Comment[zh_TW]=使用WPS Presentation編輯、播放簡報。
-Exec=env DISPLAY=:0 /usr/bin/wpp %F
+Exec=env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb DISPLAY=:0 /usr/bin/wpp %F
 GenericName=WPS Presentation
 GenericName[ar_SA]=WPS شرائح العرض
 GenericName[de_DE]=WPS Presentation

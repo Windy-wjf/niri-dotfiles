@@ -23,7 +23,7 @@ Comment[vi_VN]=Sử dụng WPS PDF để đọc và chỉnh sửa tài liệu PD
 Comment[zh_CN]=WPS PDF阅读器
 Comment[zh_HK]=使用WPS PDF 閱讀編輯PDF文件。
 Comment[zh_TW]=使用 WPS PDF 閱讀及編輯PDF文件。
-Exec=env DISPLAY=:0 /usr/bin/wpspdf %F
+Exec=env -u WAYLAND_DISPLAY QT_QPA_PLATFORM=xcb DISPLAY=:0 /usr/bin/wpspdf %F
 GenericName=Kingsoft Pdf Reader
 GenericName[ar_SA]=WPS PDF
 GenericName[de_DE]=WPS PDF

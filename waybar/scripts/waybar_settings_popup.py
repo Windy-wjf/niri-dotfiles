@@ -52,6 +52,7 @@ MODULE_LABELS = {
 DEFAULT_ZONE = {
     "niri/workspaces": "modules-left",
     "niri/window": "modules-center",
+    "custom/settings": "modules-left",
 }
 ALL_MODULES = list(MODULE_LABELS.keys())
 
@@ -117,12 +118,19 @@ def save_modules(enabled, order=None):
         backup = WAYBAR_CONFIG + ".bak-" + time.strftime("%Y%m%d-%H%M%S")
         shutil.copy2(WAYBAR_CONFIG, backup)
 
+        # 设置按钮不能隐藏，必须始终保留。
+        enabled = set(enabled) | {SETTINGS_MODULE}
+
         # 记录每个模块当前所在区域；新启用的模块用默认区域。
         zone_of = {}
         for key in MODULE_KEYS:
             if key in info:
                 for m in info[key][2]:
                     zone_of[m] = key
+        # 设置按钮不能隐藏，必须始终保留在左侧。
+        # 强制覆盖 zone_of，防止模块已在 modules-right 且 DEFAULT_ZONE 被跳过的情况。
+        zone_of[SETTINGS_MODULE] = DEFAULT_ZONE.get(SETTINGS_MODULE, "modules-left")
+
         for m in enabled:
             if m not in zone_of:
                 zone_of[m] = DEFAULT_ZONE.get(m, "modules-right")
@@ -139,25 +147,16 @@ def save_modules(enabled, order=None):
                 continue
             index, indent, mods = info[key]
             if sequence is not None:
-                kept = [
-                    m for m in sequence
-                    if m != SETTINGS_MODULE and zone_of.get(m) == key
-                ]
+                kept = [m for m in sequence if zone_of.get(m) == key]
             else:
                 kept = []
                 for m in mods:
-                    if m == SETTINGS_MODULE:
-                        continue  # 设置按钮统一放到最后
                     if m in enabled:
                         kept.append(m)
                 # 把新勾选、原本不在此数组的模块加回来。
                 for m in enabled:
-                    if m == SETTINGS_MODULE:
-                        continue
                     if zone_of.get(m) == key and m not in mods:
                         kept.append(m)
-            if key == "modules-right":
-                kept.append(SETTINGS_MODULE)
             if kept != mods:
                 changed = True
             # 保留原行末尾的逗号，避免破坏 JSONC 语法。

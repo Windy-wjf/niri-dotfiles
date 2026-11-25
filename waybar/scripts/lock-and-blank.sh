@@ -1,21 +1,21 @@
 #!/bin/bash
-# 锁屏包装：启动 swaylock，10 秒后若仍在锁屏状态则关闭显示器。
-# 这样无论自动锁屏（swayidle）还是手动锁屏（快捷键/电源菜单）行为一致。
-# 若在 10 秒内解锁，则不会熄屏。
+# 锁屏包装：锁屏期间用独立的 swayidle 管理熄屏/点亮。
+# - 无操作 10 秒 → 熄屏
+# - 有活动 → 点亮
+# 循环生效：点亮屏幕但不解锁，10 秒无操作后会再次熄屏。
 
 BLANK_DELAY="${LOCK_BLANK_DELAY:-10}"
 
-# 启动 swaylock（后台），记录 PID
+# 启动 swaylock（后台）
 swaylock &
 LOCK_PID=$!
 
-# 后台等待：到点后检查 swaylock 是否仍在运行，是则熄屏
-(
-    sleep "$BLANK_DELAY"
-    if kill -0 "$LOCK_PID" 2>/dev/null; then
-        niri msg action power-off-monitors >/dev/null 2>&1
-    fi
-) &
+# 锁屏期间专用的空闲管理：反复「无操作熄屏 → 活动点亮」
+swayidle -w \
+    timeout "$BLANK_DELAY" "niri msg action power-off-monitors" \
+    resume "niri msg action power-on-monitors" &
+IDLE_PID=$!
 
-# 等待 swaylock 退出（用户解锁）
+# 用户解锁（swaylock 退出）后清理专用 swayidle
 wait "$LOCK_PID"
+kill "$IDLE_PID" 2>/dev/null

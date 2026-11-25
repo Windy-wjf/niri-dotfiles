@@ -109,8 +109,11 @@ def parse_modules():
     return lines, info
 
 
-def save_modules(enabled, order=None):
-    """enabled: set，要显示的模块；order: 拖动排序后的模块顺序（可选）。"""
+def save_modules(enabled, order=None, zone_map=None):
+    """enabled: set，要显示的模块；order: 拖动排序后的模块顺序（可选）。
+
+    zone_map: {模块: 区域}，用于跨区域拖动（把模块从左侧拖到右侧等）。
+    """
     try:
         lines, info = parse_modules()
         if not info:
@@ -127,6 +130,13 @@ def save_modules(enabled, order=None):
             if key in info:
                 for m in info[key][2]:
                     zone_of[m] = key
+        # 应用面板里拖动后的目标区域（跨区域移动的关键）。
+        if zone_map:
+            for m, key in zone_map.items():
+                if key in MODULE_KEYS:
+                    zone_of[m] = key
+                else:
+                    zone_of.pop(m, None)  # 未显示，移出所有区域
         # 设置按钮不能隐藏，必须始终保留在左侧。
         # 强制覆盖 zone_of，防止模块已在 modules-right 且 DEFAULT_ZONE 被跳过的情况。
         zone_of[SETTINGS_MODULE] = DEFAULT_ZONE.get(SETTINGS_MODULE, "modules-left")
@@ -254,6 +264,20 @@ class ModulesPage(Gtk.Box):
         self._manual_drag = None
         self._drop_target = None
 
+        # 记录每个模块的目标区域（拖动跨越区域时更新），应用时写回配置。
+        self.zone_map = {}
+        for key in MODULE_KEYS:
+            if key in info:
+                for mod in info[key][2]:
+                    self.zone_map[mod] = key
+
+        # 中文区域名与配置 key 的映射
+        self.zone_name_to_key = {
+            "左侧": "modules-left", "中间": "modules-center",
+            "右侧": "modules-right", "未显示": None,
+        }
+        self.zone_key_to_name = {v: k for k, v in self.zone_name_to_key.items()}
+
         for m in ordered:
             row = Gtk.ListBoxRow()
             row.module_id = m
@@ -293,6 +317,7 @@ class ModulesPage(Gtk.Box):
             loc.set_use_markup(True)
             loc.set_xalign(0)
             hbox.pack_end(loc, False, False, 0)
+            row.zone_label = loc
 
             eb.add(hbox)
             row.add(eb)
@@ -436,9 +461,25 @@ class ModulesPage(Gtk.Box):
             self.listbox.insert(source, dst)
             self._drag_moved = True
             dnd_log("reorder: %d -> %d" % (src, dst))
+
+            # 跨区域拖动：把源模块的目标区域改成目标行所在区域
+            target_text = target.zone_label.get_label()
+            target_zone_text = target_text.replace("<small>", "").replace("</small>", "").strip()
+            target_key = self.zone_name_to_key.get(target_zone_text)
+            source_key = self.zone_map.get(self._manual_drag)
+            if target_key != source_key:
+                dnd_log("zone change: %s -> %s" % (source_key, target_key))
+                self.zone_map[self._manual_drag] = target_key
+                source.zone_label.set_label(
+                    "<small>%s</small>" % self.zone_key_to_name.get(target_key, "")
+                )
+                self.status.set_label(
+                    "↔ 已移动到「%s」，点「应用」保存" % self.zone_key_to_name.get(target_key, "")
+                )
         moved = self._finish_drag(widget)
         if moved:
-            self.status.set_label("✔ 顺序已调整，点「应用」保存")
+            if "↔" not in self.status.get_label():
+                self.status.set_label("✔ 顺序已调整，点「应用」保存")
         else:
             self.status.set_label("顺序未改变")
         return True
@@ -456,7 +497,7 @@ class ModulesPage(Gtk.Box):
             m for m, cb in self.toggles.items()
             if cb.get_sensitive() and cb.get_active()
         }
-        ok, msg = save_modules(enabled, self.current_order())
+        ok, msg = save_modules(enabled, self.current_order(), self.zone_map)
         self.status.set_label(("✔ " if ok else "✘ ") + msg)
 
 

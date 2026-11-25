@@ -272,6 +272,12 @@ spawn-at-startup "swaybg" "-i" "/home/wjf/Pictures/wallhaven-5yk9o1.png" "-m" "f
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
+// X11 支持：niri 不内置 XWayland，WPS 等 Qt/X11 程序依赖它
+spawn-at-startup "xwayland-satellite"
+// 通知守护进程：waybar 的通知按钮依赖它
+spawn-at-startup "swaync"
+// 空闲锁屏：时间配置在 ~/.config/swayidle/config
+spawn-at-startup "swayidle" "-w" "-C" "/home/wjf/.config/swayidle/config"
 spawn-at-startup "/home/wjf/.config/waybar/scripts/brightness-daemon.sh"
 spawn-at-startup "fcitx5"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"

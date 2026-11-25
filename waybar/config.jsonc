@@ -9,7 +9,7 @@
 
   "modules-left": ["niri/workspaces"],
   "modules-center": ["niri/window"],
-  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/display", "tray", "custom/clock", "clock"],
+  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/notification", "tray", "custom/clock", "clock", "custom/lock", "custom/settings"],
 
   "niri/workspaces": {
     "format": "{icon}",
@@ -84,11 +84,25 @@
     "on-scroll-down": "/home/wjf/.config/waybar/scripts/brightness.sh down"
   },
 
-  "custom/display": {
-    "format": "",
+  "custom/notification": {
     "tooltip": true,
-    "tooltip-format": "显示设置：分辨率 / 刷新率 / 缩放",
-    "on-click": "/home/wjf/.config/waybar/scripts/display_settings_popup.py"
+    "format": "{0} {icon}",
+    "format-icons": {
+      "notification": "󱅫",
+      "none": "󰂜",
+      "dnd-notification": "󰂠",
+      "dnd-none": "󰪓",
+      "inhibited-notification": "󰂛",
+      "inhibited-none": "󰪑",
+      "dnd-inhibited-notification": "󰂛",
+      "dnd-inhibited-none": "󰪑"
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
   },
 
   "tray": {
@@ -107,5 +121,20 @@
     "format": "{:%H:%M}",
     "interval": 30,
     "tooltip-format": "{:%Y-%m-%d %A}"
+  },
+
+
+  "custom/lock": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "锁定屏幕（Super+Alt+L）",
+    "on-click": "swaylock"
+  },
+
+  "custom/settings": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "设置：状态栏模块 / 显示器",
+    "on-click": "/home/wjf/.config/waybar/scripts/waybar_settings_popup.py"
   }
 }

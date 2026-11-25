@@ -92,11 +92,6 @@ window#waybar {
   padding: 0 10px;
 }
 
-#custom-display {
-  color: #fab387;
-  padding: 0 10px;
-}
-
 #custom-clock {
   color: #cba6f7;
   font-size: 11px;
@@ -109,6 +104,34 @@ window#waybar {
   font-weight: 700;
   padding: 0 10px 0 4px;
   margin-right: 8px;
+}
+
+#custom-lock {
+  color: #f38ba8;
+  padding: 0 10px;
+}
+
+#custom-lock:hover {
+  color: #ffffff;
+}
+
+#custom-settings {
+  color: #89dceb;
+  padding: 0 10px 0 4px;
+  font-size: 16px;
+}
+
+#custom-settings:hover {
+  color: #ffffff;
+}
+
+#custom-notification {
+  color: #f9e2af;
+  padding: 0 10px;
+}
+
+#custom-notification.notification {
+  color: #f38ba8;
 }
 
 #tray {

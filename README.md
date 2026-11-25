@@ -11,6 +11,12 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 - **显示设置面板**：点击状态栏显示器图标调整分辨率 / 刷新率 / 缩放倍率，可“保存为默认”写入 niri 配置
 - **fcitx5**：中文输入环境变量与配置
 - **fuzzel**：与 waybar 一致的暗色主题
+- **通知**：swaync 守护进程 + 状态栏通知按钮（左键切换通知中心，右键切换勿扰）
+- **锁屏**：状态栏锁屏按钮 + `Super+Alt+L` 快捷键；`swayidle` 空闲 5 分钟自动锁屏、10 分钟息屏；`swaylock` 用暗化模糊壁纸和 Catppuccin 配色
+- **WPS 兼容**：niri 不内置 XWayland，用 `xwayland-satellite` 提供 X11；`wps-desktop/` 里的用户级 desktop 覆盖为 WPS 显式设置 `DISPLAY=:0`，使 Nautilus 能正常双击打开 doc/pdf 等文件
+- **设置面板**（状态栏最右齿轮 ``）：一个面板两个标签页
+  - 「状态栏模块」：勾选要显示的模块；拖动每行左侧 `☰` 把手调整顺序（保持原区域）；应用后写回 `config.jsonc` 并重载 waybar（自动备份）
+  - 「显示设置」：分辨率 / 刷新率 / 缩放，可保存为默认写入 niri 配置
 - **壁纸**：`swaybg` 在 Background 层铺暗色月球壁纸（图片已包含在 `assets/`）
 
 ## 目录结构
@@ -25,10 +31,15 @@ waybar/scripts/vram.sh          # 独显显存占用
 waybar/scripts/brightness.sh    # 亮度显示 / 发送 up-down 事件
 waybar/scripts/brightness-daemon.sh  # DDC/CI 亮度守护进程
 waybar/scripts/network_popup.py # GTK 网络悬浮窗
-waybar/scripts/display_settings_popup.py  # GTK 显示设置面板（分辨率/刷新率/缩放）
+waybar/scripts/display_settings_popup.py  # GTK 显示设置面板（备用，当前未挂在状态栏）
+waybar/scripts/waybar_settings_popup.py  # 设置面板：模块开关 + 显示设置（齿轮按钮）
 fuzzel/fuzzel.ini               # fuzzel 暗色主题
 fcitx5/                         # fcitx5 配置
 environment.d/input-method.conf # niri 会话的输入法环境变量
+environment.d/xwayland.conf     # DISPLAY=:0，供 X11 程序（WPS 等）使用
+wps-desktop/                    # WPS desktop 覆盖（补 DISPLAY），安装到 ~/.local/share/applications/
+swaylock/config                 # 锁屏外观（壁纸/配色/指示器）
+swayidle/config                 # 空闲锁屏与息屏时间
 install.sh                      # 安装脚本
 machine-check.sh                # 换机器时检测硬件并提示需要改的配置
 mimeapps.list                   # 默认应用关联
@@ -41,7 +52,8 @@ assets/wallhaven-5yk9o1.png     # 壁纸图片（暗色月球）
 sudo pacman -S --needed \
   niri waybar kitty fuzzel swaylock swaybg \
   fcitx5 fcitx5-chinese-addons \
-  polkit-gnome networkmanager wireplumber playerctl \
+  polkit-gnome networkmanager wireplumber playerctl swaync xwayland-satellite \
+  swaylock swayidle imagemagick \
   ddcutil python-gobject gtk3 gtk-layer-shell python-pillow grim \
   ttf-cascadia-code-nerd ttf-nerd-fonts-symbols
 ```

@@ -1,0 +1,11 @@
+# swayidle 空闲管理：由 niri 的 spawn-at-startup 启动
+# 修改秒数即可调整锁屏 / 息屏时间
+
+# 无操作 5 分钟锁屏
+timeout 300 "swaylock"
+
+# 无操作 10 分钟关闭显示器，重新有活动时点亮
+timeout 600 "niri msg action power-off-monitors" resume "niri msg action power-on-monitors"
+
+# 系统休眠前锁屏
+before-sleep "swaylock"

@@ -1,0 +1,36 @@
+# swaylock 锁屏外观（Catppuccin Mocha 风格）
+# 注意：配置项格式为 长选项=值（swaylock 要求等号），不要写成空格分隔
+
+image=/home/wjf/Pictures/wallhaven-5yk9o1-lock.png
+scaling=fill
+
+font=CaskaydiaCove Nerd Font
+font-size=18
+
+# 解锁指示器：透明内圈 + 蓝色圆环
+inside-color=#00000000
+ring-color=#89b4fa
+key-hl-color=#cba6f7
+line-color=#00000000
+separator-color=#00000000
+text-color=#cdd6f4
+
+# 输入正确
+inside-clear-color=#00000000
+ring-clear-color=#a6e3a1
+text-clear-color=#cdd6f4
+
+# 输入错误
+inside-wrong-color=#00000000
+ring-wrong-color=#f38ba8
+text-wrong-color=#f38ba8
+
+# 验证中
+inside-ver-color=#00000000
+ring-ver-color=#f9e2af
+text-ver-color=#f9e2af
+
+indicator-radius=110
+indicator-thickness=12
+indicator-idle-visible
+show-failed-attempts

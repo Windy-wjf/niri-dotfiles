@@ -260,12 +260,18 @@ class ModulesPage(Gtk.Box):
             hbox.set_border_width(2)
 
             handle = Gtk.Label(label="\uf0c9")  # fa-bars
-            handle.set_tooltip_text("拖动调整顺序")
+            handle.set_tooltip_text("按住拖动调整顺序")
             handle.set_xalign(0)
+            handle.set_events(
+                Gdk.EventMask.BUTTON_PRESS_MASK
+                | Gdk.EventMask.BUTTON_RELEASE_MASK
+                | Gdk.EventMask.POINTER_MOTION_MASK
+            )
             handle.drag_source_set(
                 Gdk.ModifierType.BUTTON1_MASK, targets, Gdk.DragAction.MOVE
             )
             handle.connect("drag-begin", self.on_drag_begin, m)
+            handle.connect("drag-data-get", self.on_drag_data_get, m)
             handle.connect("drag-end", self.on_drag_end)
             hbox.pack_start(handle, False, False, 0)
 
@@ -332,40 +338,55 @@ class ModulesPage(Gtk.Box):
     def on_drag_begin(self, widget, context, module_id):
         self._drag_module = module_id
         self.get_toplevel()._dragging = True
+        source = self._row_of(module_id)
+        if source is not None:
+            source.get_style_context().add_class("row-dragging")
+
+    def on_drag_data_get(self, widget, context, data, info, time, module_id):
+        # 必须提供拖拽数据，否则 GTK 不会真正发起拖动
+        data.set("text/plain", 8, module_id)
 
     def on_drag_end(self, widget, context):
+        if self._drag_module:
+            source = self._row_of(self._drag_module)
+            if source is not None:
+                source.get_style_context().remove_class("row-dragging")
         self._drag_module = None
         self.listbox.drag_unhighlight_row()
         self.get_toplevel()._dragging = False
+        self.status.set_label("✔ 顺序已调整，点「应用」保存")
 
     def on_drag_motion(self, widget, context, x, y, time):
+        if not self._drag_module:
+            return False
         row = self.listbox.get_row_at_y(y)
         self.listbox.drag_unhighlight_row()
-        if row is not None:
-            self.listbox.drag_highlight_row(row)
-            context.drag_status(Gdk.DragAction.MOVE, time)
-            return True
-        return False
+        if row is None:
+            return False
+        source = self._row_of(self._drag_module)
+        if source is not None and source != row:
+            src = source.get_index()
+            dst = row.get_index()
+            if src != dst:
+                # 实时移动行，拖动过程中就能看到顺序变化
+                self.listbox.remove(source)
+                self.listbox.insert(source, dst)
+                row = source
+                self.status.set_label(
+                    "↕ 已移动到第 %d 项（点「应用」保存）" % (dst + 1)
+                )
+        self.listbox.drag_highlight_row(row)
+        context.drag_status(Gdk.DragAction.MOVE, time)
+        return True
 
     def on_drag_leave(self, widget, context, time):
         self.listbox.drag_unhighlight_row()
         return False
 
     def on_drag_drop(self, widget, context, x, y, time):
-        target = self.listbox.get_row_at_y(y)
-        source_id = self._drag_module
-        if target is None or not source_id:
+        if not self._drag_module:
             return False
-        source = self._row_of(source_id)
-        if source is None:
-            return False
-        src = source.get_index()
-        dst = target.get_index()
-        if src != dst:
-            self.listbox.remove(source)
-            if src < dst:
-                dst -= 1
-            self.listbox.insert(source, dst)
+        Gtk.drag_finish(context, True, False, time)
         return True
 
     def on_apply(self, button):
@@ -682,6 +703,21 @@ class SettingsPopup(Gtk.Window):
 
         self.ever_inside = False
         self._closing = False
+
+        # 拖动模块时的高亮反馈
+        css = b"""
+        .row-dragging {
+            background: rgba(137, 180, 250, 0.20);
+            border-radius: 8px;
+        }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
         self.connect("key-press-event", self.on_key)
         self.connect("enter-notify-event", self.on_enter)
         self.connect("leave-notify-event", self.on_leave)

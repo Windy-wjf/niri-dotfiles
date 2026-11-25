@@ -212,11 +212,10 @@ class ModulesPage(Gtk.Box):
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.set_border_width(10)
         self.toggles = {}
-        self._drag_module = None
 
         intro = Gtk.Label(
-            label=("<small>勾选显示/隐藏；拖动左侧 <b>☰</b> 把手调整顺序"
-                   "（保持原区域）；点击「应用」后生效。</small>")
+            label=("<small>勾选显示/隐藏；按住任意一行（复选框除外）拖动调整顺序"
+                   "；点击「应用」后生效。</small>")
         )
         intro.set_use_markup(True)
         intro.set_xalign(0)
@@ -255,30 +254,33 @@ class ModulesPage(Gtk.Box):
         self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         # 用指针抓取实现拖动，绕过 GTK DnD 在该弹窗里的不稳定行为
         self._manual_drag = None
+        self._drop_target = None
 
         for m in ordered:
             row = Gtk.ListBoxRow()
             row.module_id = m
-            hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-            hbox.set_border_width(2)
 
-            handle = Gtk.Label(label="\uf0c9")  # fa-bars
-            handle.set_tooltip_text("按住拖动调整顺序")
-            handle.set_xalign(0)
-            handle.set_events(
+            # GtkLabel / GtkBox 没有自己的窗口，收不到鼠标事件，
+            # 必须用 EventBox 包住整行来做拖动。
+            eb = Gtk.EventBox()
+            eb.set_visible_window(False)
+            eb.add_events(
                 Gdk.EventMask.BUTTON_PRESS_MASK
                 | Gdk.EventMask.BUTTON_RELEASE_MASK
                 | Gdk.EventMask.POINTER_MOTION_MASK
             )
-            try:
-                handle.set_cursor(
-                    Gdk.Cursor.new_from_name(Gdk.Display.get_default(), "grab")
-                )
-            except Exception:
-                pass
-            handle.connect("button-press-event", self.on_handle_press, m)
-            handle.connect("motion-notify-event", self.on_handle_motion)
-            handle.connect("button-release-event", self.on_handle_release)
+            eb.connect("button-press-event", self.on_handle_press, m)
+            eb.connect("motion-notify-event", self.on_handle_motion)
+            eb.connect("button-release-event", self.on_handle_release)
+            eb.connect("grab-broken-event", self.on_grab_broken)
+            eb.connect("realize", lambda w: self._set_eb_cursor(w, "grab"))
+
+            hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            hbox.set_border_width(2)
+
+            handle = Gtk.Label(label="\uf0c9")  # fa-bars
+            handle.set_tooltip_text("按住任意位置拖动调整顺序")
+            handle.set_xalign(0)
             hbox.pack_start(handle, False, False, 0)
 
             cb = new_checkbox(MODULE_LABELS.get(m, m), m in present)
@@ -294,7 +296,8 @@ class ModulesPage(Gtk.Box):
             loc.set_xalign(0)
             hbox.pack_end(loc, False, False, 0)
 
-            row.add(hbox)
+            eb.add(hbox)
+            row.add(eb)
             self.listbox.add(row)
             self.toggles[m] = cb
 
@@ -341,18 +344,37 @@ class ModulesPage(Gtk.Box):
                 return row
             index += 1
 
+    def _set_eb_cursor(self, widget, name):
+        try:
+            cursor = Gdk.Cursor.new_from_name(Gdk.Display.get_default(), name)
+            widget.get_window().set_cursor(cursor)
+        except Exception:
+            pass
+
+    def _set_drop_target(self, module_id):
+        """高亮将要落到的行（只改样式，不移动行，避免拖动中销毁窗口）。"""
+        if getattr(self, "_drop_target", None) == module_id:
+            return
+        old = getattr(self, "_drop_target", None)
+        if old:
+            row = self._row_of(old)
+            if row is not None:
+                row.get_style_context().remove_class("row-drop-target")
+        self._drop_target = module_id
+        if module_id:
+            row = self._row_of(module_id)
+            if row is not None:
+                row.get_style_context().add_class("row-drop-target")
+
     def on_handle_press(self, widget, event, module_id):
         if event.button != Gdk.BUTTON_PRIMARY:
             return False
         dnd_log("press: %s" % module_id)
         self._manual_drag = module_id
+        self._drop_target = None
+        self._drag_moved = False
         widget.grab_add()
-        try:
-            widget.get_window().set_cursor(
-                Gdk.Cursor.new_from_name(Gdk.Display.get_default(), "grabbing")
-            )
-        except Exception:
-            pass
+        self._set_eb_cursor(widget, "grabbing")
         self.get_toplevel()._dragging = True
         row = self._row_of(module_id)
         if row is not None:
@@ -365,40 +387,71 @@ class ModulesPage(Gtk.Box):
     def on_handle_motion(self, widget, event):
         if not self._manual_drag:
             return False
-        # 把把手的坐标换算成列表坐标，抓住指针后即使移出把手也能收到事件
+        # 把事件坐标换算成列表坐标；抓住指针后即使移出行也能收到事件
         _, y = widget.translate_coordinates(self.listbox, event.x, event.y)
         row = self.listbox.get_row_at_y(y)
         if row is None:
             return True
-        source = self._row_of(self._manual_drag)
-        if source is not None and source != row:
-            src = source.get_index()
-            dst = row.get_index()
-            if src != dst:
-                dnd_log("reorder: %d -> %d" % (src, dst))
-                self.listbox.remove(source)
-                self.listbox.insert(source, dst)
-                self.status.set_label(
-                    "↕ 已移动到第 %d 项（点「应用」保存）" % (dst + 1)
-                )
+        if getattr(row, "module_id", None) != getattr(self, "_last_motion_row", None):
+            dnd_log("motion: y=%.1f row=%s" % (y, getattr(row, "module_id", None)))
+            self._last_motion_row = getattr(row, "module_id", None)
+        if getattr(row, "module_id", None) == self._manual_drag:
+            self._set_drop_target(None)
+            self.status.set_label(
+                "↕ 正在拖动「%s」" % MODULE_LABELS.get(self._manual_drag, self._manual_drag)
+            )
+            return True
+        self._set_drop_target(row.module_id)
+        self.status.set_label(
+            "↕ 松开后移动到第 %d 项（点「应用」保存）" % (row.get_index() + 1)
+        )
         return True
+
+    def _finish_drag(self, widget):
+        """清理拖动状态；返回是否发生了换位。"""
+        moved = getattr(self, "_drag_moved", False)
+        if getattr(self, "_manual_drag", None):
+            row = self._row_of(self._manual_drag)
+            if row is not None:
+                row.get_style_context().remove_class("row-dragging")
+        self._set_drop_target(None)
+        try:
+            widget.grab_remove()
+        except Exception:
+            pass
+        self._set_eb_cursor(widget, "grab")
+        self._manual_drag = None
+        self._drop_target = None
+        self.get_toplevel()._dragging = False
+        return moved
 
     def on_handle_release(self, widget, event):
         if not self._manual_drag:
             return False
-        dnd_log("release: %s" % self._manual_drag)
+        dnd_log("release: %s target: %s" % (self._manual_drag, self._drop_target))
         source = self._row_of(self._manual_drag)
-        if source is not None:
-            source.get_style_context().remove_class("row-dragging")
-        widget.grab_remove()
-        try:
-            widget.get_window().set_cursor(None)
-        except Exception:
-            pass
-        self._manual_drag = None
-        self.get_toplevel()._dragging = False
-        self.status.set_label("✔ 顺序已调整，点「应用」保存")
+        target = self._row_of(self._drop_target) if self._drop_target else None
+        if source is not None and target is not None and source != target:
+            src = source.get_index()
+            dst = target.get_index()
+            self.listbox.remove(source)
+            self.listbox.insert(source, dst)
+            self._drag_moved = True
+            dnd_log("reorder: %d -> %d" % (src, dst))
+        moved = self._finish_drag(widget)
+        if moved:
+            self.status.set_label("✔ 顺序已调整，点「应用」保存")
+        else:
+            self.status.set_label("顺序未改变")
         return True
+
+    def on_grab_broken(self, widget, event):
+        if not self._manual_drag:
+            return False
+        dnd_log("grab-broken")
+        self._finish_drag(widget)
+        self.status.set_label("拖动已取消")
+        return False
 
     def on_apply(self, button):
         enabled = {
@@ -718,7 +771,12 @@ class SettingsPopup(Gtk.Window):
         # 拖动模块时的高亮反馈
         css = b"""
         .row-dragging {
-            background: rgba(137, 180, 250, 0.20);
+            background: rgba(137, 180, 250, 0.18);
+            border-radius: 8px;
+        }
+        .row-drop-target {
+            background: rgba(166, 227, 161, 0.22);
+            border: 1px solid rgba(166, 227, 161, 0.65);
             border-radius: 8px;
         }
         """

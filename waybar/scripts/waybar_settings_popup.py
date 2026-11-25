@@ -28,7 +28,7 @@ NIRI_CONFIG = os.environ.get(
     "NIRI_CONFIG", os.path.expanduser("~/.config/niri/config.kdl")
 )
 POPUP_WIDTH = 460
-POPUP_RIGHT_MARGIN = 8
+POPUP_EDGE_MARGIN = 8
 SETTINGS_MODULE = "custom/settings"
 
 MODULE_LABELS = {
@@ -759,9 +759,9 @@ class SettingsPopup(Gtk.Window):
         GtkLayerShell.init_for_window(self)
         GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
         GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
-        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.LEFT, True)
         GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, 8)
-        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, POPUP_RIGHT_MARGIN)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, POPUP_EDGE_MARGIN)
         GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
 
         self._closing = False

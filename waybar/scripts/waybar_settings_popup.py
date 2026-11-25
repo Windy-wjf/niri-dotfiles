@@ -42,7 +42,7 @@ MODULE_LABELS = {
     "pulseaudio": "音量",
     "custom/brightness": "亮度",
     "custom/notification": "通知按钮",
-    "custom/display": "显示设置按钮",
+    "custom/power": "电源菜单按钮",
     "custom/settings": "设置按钮（始终保留）",
     "tray": "系统托盘",
     "custom/clock": "日期",

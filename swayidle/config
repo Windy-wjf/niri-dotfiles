@@ -1,11 +1,11 @@
 # swayidle 空闲管理：由 niri 的 spawn-at-startup 启动
-# 修改秒数即可调整锁屏 / 息屏时间
+# 锁屏后 10 秒自动熄屏由 lock-and-blank.sh 处理
 
-# 无操作 5 分钟锁屏
-timeout 300 "swaylock"
-
-# 无操作 10 分钟关闭显示器，重新有活动时点亮
-timeout 600 "niri msg action power-off-monitors" resume "niri msg action power-on-monitors"
+# 无操作 5 分钟锁屏（脚本会在锁屏 10 秒后熄屏）
+timeout 300 "/home/wjf/.config/waybar/scripts/lock-and-blank.sh"
 
 # 系统休眠前锁屏
-before-sleep "swaylock"
+before-sleep "/home/wjf/.config/waybar/scripts/lock-and-blank.sh"
+
+# 有活动时点亮显示器（resume 仍需要，防止熄屏后无法点亮）
+timeout 900 "niri msg action power-off-monitors" resume "niri msg action power-on-monitors"

@@ -192,7 +192,7 @@ class PowerMenu(Gtk.Window):
         add_button("⟳  重启", lambda b: self.act_confirm("重启", ["systemctl", "reboot"]), "power-reboot")
 
     def act_lock(self):
-        spawn(["swaylock"])
+        spawn(["/home/wjf/.config/waybar/scripts/lock-and-blank.sh"])
         self.shutdown()
 
     def act_logout(self):

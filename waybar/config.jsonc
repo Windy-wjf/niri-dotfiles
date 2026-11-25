@@ -9,7 +9,7 @@
 
   "modules-left": ["niri/workspaces"],
   "modules-center": ["niri/window"],
-  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/notification", "tray", "custom/clock", "clock", "custom/lock", "custom/settings"],
+  "modules-right": ["cpu", "memory", "custom/vram", "network", "pulseaudio", "custom/brightness", "custom/notification", "tray", "custom/clock", "clock", "custom/lock", "custom/settings", "custom/power"],
 
   "niri/workspaces": {
     "format": "{icon}",
@@ -136,5 +136,12 @@
     "tooltip": true,
     "tooltip-format": "设置：状态栏模块 / 显示器",
     "on-click": "/home/wjf/.config/waybar/scripts/waybar_settings_popup.py"
+  },
+
+  "custom/power": {
+    "format": "⏻",
+    "tooltip": true,
+    "tooltip-format": "电源：锁屏 / 登出 / 关机 / 重启",
+    "on-click": "/home/wjf/.config/waybar/scripts/power_menu.py"
   }
 }

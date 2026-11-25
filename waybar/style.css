@@ -125,6 +125,16 @@ window#waybar {
   color: #ffffff;
 }
 
+#custom-power {
+  color: #f87171;
+  padding: 0 10px 0 4px;
+  font-size: 16px;
+}
+
+#custom-power:hover {
+  color: #ffffff;
+}
+
 #custom-notification {
   color: #f9e2af;
   padding: 0 10px;

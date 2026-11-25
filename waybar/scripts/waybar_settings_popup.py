@@ -198,6 +198,15 @@ def niri_output(name, args):
     return run(["niri", "msg", "output", name] + args)
 
 
+def dnd_log(message):
+    """记录拖拽事件，便于排查拖动不生效的问题。"""
+    try:
+        with open("/tmp/waybar-settings-dnd.log", "a") as f:
+            f.write("%s %s\n" % (time.strftime("%H:%M:%S"), message))
+    except Exception:
+        pass
+
+
 class ModulesPage(Gtk.Box):
     def __init__(self):
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -242,16 +251,10 @@ class ModulesPage(Gtk.Box):
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_min_content_height(300)
 
-        targets = [Gtk.TargetEntry.new("text/plain", 0, 0)]
         self.listbox = Gtk.ListBox()
         self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.listbox.drag_dest_set(
-            Gtk.DestDefaults.MOTION | Gtk.DestDefaults.DROP,
-            targets, Gdk.DragAction.MOVE,
-        )
-        self.listbox.connect("drag-motion", self.on_drag_motion)
-        self.listbox.connect("drag-leave", self.on_drag_leave)
-        self.listbox.connect("drag-drop", self.on_drag_drop)
+        # 用指针抓取实现拖动，绕过 GTK DnD 在该弹窗里的不稳定行为
+        self._manual_drag = None
 
         for m in ordered:
             row = Gtk.ListBoxRow()
@@ -267,12 +270,15 @@ class ModulesPage(Gtk.Box):
                 | Gdk.EventMask.BUTTON_RELEASE_MASK
                 | Gdk.EventMask.POINTER_MOTION_MASK
             )
-            handle.drag_source_set(
-                Gdk.ModifierType.BUTTON1_MASK, targets, Gdk.DragAction.MOVE
-            )
-            handle.connect("drag-begin", self.on_drag_begin, m)
-            handle.connect("drag-data-get", self.on_drag_data_get, m)
-            handle.connect("drag-end", self.on_drag_end)
+            try:
+                handle.set_cursor(
+                    Gdk.Cursor.new_from_name(Gdk.Display.get_default(), "grab")
+                )
+            except Exception:
+                pass
+            handle.connect("button-press-event", self.on_handle_press, m)
+            handle.connect("motion-notify-event", self.on_handle_motion)
+            handle.connect("button-release-event", self.on_handle_release)
             hbox.pack_start(handle, False, False, 0)
 
             cb = new_checkbox(MODULE_LABELS.get(m, m), m in present)
@@ -335,58 +341,63 @@ class ModulesPage(Gtk.Box):
                 return row
             index += 1
 
-    def on_drag_begin(self, widget, context, module_id):
-        self._drag_module = module_id
+    def on_handle_press(self, widget, event, module_id):
+        if event.button != Gdk.BUTTON_PRIMARY:
+            return False
+        dnd_log("press: %s" % module_id)
+        self._manual_drag = module_id
+        widget.grab_add()
+        try:
+            widget.get_window().set_cursor(
+                Gdk.Cursor.new_from_name(Gdk.Display.get_default(), "grabbing")
+            )
+        except Exception:
+            pass
         self.get_toplevel()._dragging = True
-        source = self._row_of(module_id)
-        if source is not None:
-            source.get_style_context().add_class("row-dragging")
+        row = self._row_of(module_id)
+        if row is not None:
+            row.get_style_context().add_class("row-dragging")
+        self.status.set_label(
+            "↕ 正在拖动「%s」，移到目标位置后松开" % MODULE_LABELS.get(module_id, module_id)
+        )
+        return True
 
-    def on_drag_data_get(self, widget, context, data, info, time, module_id):
-        # 必须提供拖拽数据，否则 GTK 不会真正发起拖动
-        data.set("text/plain", 8, module_id)
-
-    def on_drag_end(self, widget, context):
-        if self._drag_module:
-            source = self._row_of(self._drag_module)
-            if source is not None:
-                source.get_style_context().remove_class("row-dragging")
-        self._drag_module = None
-        self.listbox.drag_unhighlight_row()
-        self.get_toplevel()._dragging = False
-        self.status.set_label("✔ 顺序已调整，点「应用」保存")
-
-    def on_drag_motion(self, widget, context, x, y, time):
-        if not self._drag_module:
+    def on_handle_motion(self, widget, event):
+        if not self._manual_drag:
             return False
+        # 把把手的坐标换算成列表坐标，抓住指针后即使移出把手也能收到事件
+        _, y = widget.translate_coordinates(self.listbox, event.x, event.y)
         row = self.listbox.get_row_at_y(y)
-        self.listbox.drag_unhighlight_row()
         if row is None:
-            return False
-        source = self._row_of(self._drag_module)
+            return True
+        source = self._row_of(self._manual_drag)
         if source is not None and source != row:
             src = source.get_index()
             dst = row.get_index()
             if src != dst:
-                # 实时移动行，拖动过程中就能看到顺序变化
+                dnd_log("reorder: %d -> %d" % (src, dst))
                 self.listbox.remove(source)
                 self.listbox.insert(source, dst)
-                row = source
                 self.status.set_label(
                     "↕ 已移动到第 %d 项（点「应用」保存）" % (dst + 1)
                 )
-        self.listbox.drag_highlight_row(row)
-        context.drag_status(Gdk.DragAction.MOVE, time)
         return True
 
-    def on_drag_leave(self, widget, context, time):
-        self.listbox.drag_unhighlight_row()
-        return False
-
-    def on_drag_drop(self, widget, context, x, y, time):
-        if not self._drag_module:
+    def on_handle_release(self, widget, event):
+        if not self._manual_drag:
             return False
-        Gtk.drag_finish(context, True, False, time)
+        dnd_log("release: %s" % self._manual_drag)
+        source = self._row_of(self._manual_drag)
+        if source is not None:
+            source.get_style_context().remove_class("row-dragging")
+        widget.grab_remove()
+        try:
+            widget.get_window().set_cursor(None)
+        except Exception:
+            pass
+        self._manual_drag = None
+        self.get_toplevel()._dragging = False
+        self.status.set_label("✔ 顺序已调整，点「应用」保存")
         return True
 
     def on_apply(self, button):

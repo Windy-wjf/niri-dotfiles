@@ -169,27 +169,34 @@ class PowerMenu(Gtk.Window):
         self._build_ui()
 
     def _build_ui(self):
-        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        root.set_border_width(12)
-        self.add(root)
+        self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.root.set_border_width(12)
+        self.add(self.root)
+        self._build_main_menu()
 
+    def _clear_root(self):
+        for child in self.root.get_children():
+            self.root.remove(child)
+
+    def _add_button(self, label, callback, style_class):
+        btn = Gtk.Button(label=label)
+        btn.set_size_request(-1, 38)
+        btn.get_style_context().add_class(style_class)
+        btn.connect("clicked", callback)
+        self.root.pack_start(btn, False, False, 0)
+        return btn
+
+    def _build_main_menu(self):
+        self._clear_root()
         title = Gtk.Label(label="<b>电源</b>")
         title.set_use_markup(True)
         title.set_xalign(0)
-        root.pack_start(title, False, False, 0)
-
-        def add_button(label, callback, style_class):
-            btn = Gtk.Button(label=label)
-            btn.set_size_request(-1, 38)
-            ctx = btn.get_style_context()
-            ctx.add_class(style_class)
-            btn.connect("clicked", callback)
-            root.pack_start(btn, False, False, 0)
-
-        add_button("🔒  锁屏", lambda b: self.act_lock(), "power-lock")
-        add_button("  登出", lambda b: self.act_logout(), "power-logout")
-        add_button("⏻  关机", lambda b: self.act_confirm("关机", ["systemctl", "poweroff"]), "power-off")
-        add_button("⟳  重启", lambda b: self.act_confirm("重启", ["systemctl", "reboot"]), "power-reboot")
+        self.root.pack_start(title, False, False, 0)
+        self._add_button("🔒  锁屏", lambda b: self.act_lock(), "power-lock")
+        self._add_button("  登出", lambda b: self.act_logout(), "power-logout")
+        self._add_button("⏻  关机", lambda b: self.act_confirm("关机", ["systemctl", "poweroff"]), "power-off")
+        self._add_button("⟳  重启", lambda b: self.act_confirm("重启", ["systemctl", "reboot"]), "power-reboot")
+        self.root.show_all()
 
     def act_lock(self):
         spawn(["/home/wjf/.config/waybar/scripts/lock-and-blank.sh"])
@@ -200,18 +207,36 @@ class PowerMenu(Gtk.Window):
         self.shutdown()
 
     def act_confirm(self, name, cmd):
+        # 独立 Gtk.MessageDialog 是普通窗口，会被 layer shell 的全屏遮罩盖住、
+        # 且键盘被 EXCLUSIVE 模式锁住，按钮点不了。改为在 popup 内部内嵌确认。
         self.dialog_open = True
-        dialog = Gtk.MessageDialog(
-            transient_for=self, flags=Gtk.DialogFlags.MODAL,
-            message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.OK_CANCEL,
-            text="确定要%s吗？" % name,
-        )
-        response = dialog.run()
-        dialog.destroy()
+        self._clear_root()
+
+        label = Gtk.Label(label="<b>确定要%s吗？</b>" % name)
+        label.set_use_markup(True)
+        label.set_xalign(0)
+        self.root.pack_start(label, False, False, 0)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        cancel = Gtk.Button(label="取消")
+        cancel.set_size_request(-1, 38)
+        cancel.connect("clicked", lambda b: self._cancel_confirm())
+        confirm = Gtk.Button(label="确定")
+        confirm.set_size_request(-1, 38)
+        confirm.get_style_context().add_class("power-off")
+        confirm.connect("clicked", lambda b: self._do_confirm(cmd))
+        box.pack_start(cancel, True, True, 0)
+        box.pack_start(confirm, True, True, 0)
+        self.root.pack_start(box, False, False, 0)
+        self.root.show_all()
+
+    def _cancel_confirm(self):
         self.dialog_open = False
-        if response == Gtk.ResponseType.OK:
-            spawn(cmd)
-            self.shutdown()
+        self._build_main_menu()
+
+    def _do_confirm(self, cmd):
+        spawn(cmd)
+        self.shutdown()
 
     def on_key(self, widget, event):
         if event.keyval == Gdk.KEY_Escape:

@@ -331,6 +331,14 @@ window-rule {
     default-column-width {}
 }
 
+// WPS 三件套默认全屏打开
+window-rule {
+    match app-id="wps"
+    match app-id="et"
+    match app-id="wpp"
+    open-fullscreen true
+}
+
 // Open the Firefox picture-in-picture player as floating by default.
 window-rule {
     // This app-id regular expression will work for both:

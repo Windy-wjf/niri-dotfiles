@@ -18,7 +18,7 @@ Arch Linux + [niri](https://github.com/YaLTeR/niri) 的个人桌面配置：4K 1
 - **设置面板**（状态栏最右齿轮 ``）：一个面板两个标签页
   - 「状态栏模块」：勾选要显示的模块；拖动每行左侧 `☰` 把手调整顺序（保持原区域）；应用后写回 `config.jsonc` 并重载 waybar（自动备份）
   - 「显示设置」：分辨率 / 刷新率 / 缩放，可保存为默认写入 niri 配置
-- **壁纸**：`swaybg` 在 Background 层铺暗色月球壁纸（图片已包含在 `assets/`）
+- **壁纸**：`swaybg` 在 Background 层铺暗色月球壁纸（图片已包含在 `assets/`）；可用图形工具 **Azote**（`Super+D` 搜索 "Azote" 启动）交互式更换壁纸和填充模式
 
 ## 目录结构
 
@@ -52,7 +52,7 @@ assets/wallhaven-5yk9o1.png     # 壁纸图片（暗色月球）
 
 ```bash
 sudo pacman -S --needed \
-  niri waybar kitty fuzzel swaylock swaybg \
+  niri waybar kitty fuzzel swaylock swaybg azote wlr-randr \
   fcitx5 fcitx5-chinese-addons \
   polkit-gnome networkmanager wireplumber playerctl swaync xwayland-satellite \
   swaylock swayidle imagemagick \

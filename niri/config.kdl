@@ -278,7 +278,6 @@ spawn-at-startup "xwayland-satellite"
 spawn-at-startup "swaync"
 // 空闲锁屏：时间配置在 ~/.config/swayidle/config
 spawn-at-startup "swayidle" "-w" "-C" "/home/wjf/.config/swayidle/config"
-spawn-at-startup "/home/wjf/.config/waybar/scripts/brightness-daemon.sh"
 spawn-at-startup "fcitx5"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 

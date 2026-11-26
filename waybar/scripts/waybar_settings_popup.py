@@ -58,7 +58,7 @@ ALL_MODULES = list(MODULE_LABELS.keys())
 
 MODULE_KEYS = ("modules-left", "modules-center", "modules-right")
 MODULE_RE = re.compile(
-    r'^(\s*)"(modules-left|modules-center|modules-right)"\s*:\s*\[([^\]]*)\]'
+    r'(\s*)"(modules-left|modules-center|modules-right)"\s*:\s*\[([^\]]*)\]'
 )
 SCALE_CHOICES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
 
@@ -100,12 +100,11 @@ def parse_modules():
         lines = f.readlines()
     info = {}
     for index, line in enumerate(lines):
-        m = MODULE_RE.match(line)
-        if not m:
-            continue
-        indent, key, body = m.group(1), m.group(2), m.group(3)
-        mods = [x.strip().strip('"\'') for x in body.split(",") if x.strip()]
-        info[key] = (index, indent, mods)
+        # finditer：一行里可能有多个 modules-* key，避免漏掉后面的
+        for m in MODULE_RE.finditer(line):
+            indent, key, body = m.group(1), m.group(2), m.group(3)
+            mods = [x.strip().strip('"\'') for x in body.split(",") if x.strip()]
+            info[key] = (index, indent, mods)
     return lines, info
 
 

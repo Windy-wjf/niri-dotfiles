@@ -412,7 +412,7 @@ binds {
     // Open/close the Overview: a zoomed-out view of workspaces and windows.
     // You can also move the mouse into the top-left hot corner,
     // or do a four-finger swipe up on a touchpad.
-    Mod+O repeat=false hotkey-overlay-title="切换总览" { toggle-overview; }
+    Mod+W repeat=false hotkey-overlay-title="切换总览" { toggle-overview; }
 
     Mod+Q repeat=false hotkey-overlay-title="关闭窗口" { close-window; }
 
@@ -614,7 +614,7 @@ binds {
     // Toggle tabbed column display mode.
     // Windows in this column will appear as vertical tabs,
     // rather than stacked on top of each other.
-    Mod+W hotkey-overlay-title="切换列标签显示" { toggle-column-tabbed-display; }
+    Mod+T hotkey-overlay-title="切换列标签显示" { toggle-column-tabbed-display; }
 
     // Actions to switch layouts.
     // Note: if you uncomment these, make sure you do NOT have

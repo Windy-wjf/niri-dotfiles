@@ -281,6 +281,9 @@ spawn-at-startup "swayidle" "-w" "-C" "/home/wjf/.config/swayidle/config"
 spawn-at-startup "fcitx5"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 
+// 台式机外接屏才需要 DDC 守护进程；笔记本内屏用 brightnessctl，无需启动
+spawn-sh-at-startup "if ! ls /sys/class/backlight/* >/dev/null 2>&1; then /home/wjf/.config/waybar/scripts/brightness-daemon.sh; fi"
+
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 

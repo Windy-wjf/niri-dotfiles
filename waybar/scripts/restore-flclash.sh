@@ -11,6 +11,13 @@ set -euo pipefail
 
 FORCE="${1:-}"
 LOCK="$HOME/.local/share/com.follow.clash/FlClash.lock"
+LOG="/tmp/restore-flclash.log"
+
+log() {
+    echo "$(date '+%H:%M:%S') $*" | tee -a "$LOG"
+}
+
+log "脚本触发（参数: ${FORCE:-无}）"
 
 has_window() {
     niri msg -j windows 2>/dev/null | python3 -c '
@@ -25,7 +32,7 @@ except Exception:
 
 # 无窗口但有进程 = 卡死状态；或者强制重启
 if [ "$FORCE" != "--force" ] && [ "$(has_window)" = "yes" ]; then
-    echo "FlClash 窗口正常，无需修复。"
+    log "FlClash 窗口正常，无需修复。"
     exit 0
 fi
 
@@ -34,11 +41,11 @@ if [ "$(has_window)" = "yes" ]; then
 else
     state="窗口丢失"
 fi
-echo "检测：$state"
+log "检测：$state"
 
 # 先结束所有 flclash 主进程（SIGTERM 对 Flutter 无效，直接 SIGKILL）
 if pgrep -x flclash >/dev/null 2>&1; then
-    echo "结束卡死的 flclash 进程..."
+    log "结束卡死的 flclash 进程..."
     pkill -9 -x flclash || true
     sleep 1.5
 fi
@@ -46,17 +53,17 @@ fi
 # 清掉单实例锁，否则新进程会认为已有实例而退出
 rm -f "$LOCK"
 
-echo "重新启动 flclash..."
+log "重新启动 flclash..."
 niri msg action spawn-sh -- "flclash"
 
 # 最多等 12 秒确认窗口出现
 for _ in $(seq 1 12); do
     sleep 1
     if [ "$(has_window)" = "yes" ]; then
-        echo "✓ FlClash 窗口已恢复。"
+        log "✓ FlClash 窗口已恢复。"
         exit 0
     fi
 done
 
-echo "✗ 窗口仍未出现，请检查 flclash 运行状态。" >&2
+log "✗ 窗口仍未出现，请检查 flclash 运行状态。" >&2
 exit 1
